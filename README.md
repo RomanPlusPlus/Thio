@@ -27,6 +27,10 @@ Currently, Thio supports one anomaly detection algo - KitNET. It is a lightweigh
 
 They're not affiliated with the Thio project. 
 
+## Compute
+
+You can run Thio on CPU, and it will still be able to detect anomalies in real-time, and learn on new data.
+
 ##  Installation and usage
 
 Thio was tested on Ubuntu 16.04.
