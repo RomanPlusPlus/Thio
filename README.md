@@ -11,7 +11,7 @@ With Thio, you can do it.
 
 Thio takes synthetic or real-life data as the input (you can toggle between them in config/settings.xml).
 
-The synthetic data, if plotted, looks like something one would get from noisy physical sensors (see the picture below).
+The synthetic data is generated on the fly. If plotted, it looks like something one would get from noisy physical sensors (see the picture below).
 
 The real-life data are current cryptocurrencies exchange rates, fetched from [CoinGecko](https://www.coingecko.com/en).  
 
