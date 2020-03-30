@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--settings-->
+
+<settings>
+
+  <data_source value = "synthetic"></data_source> <!--can be "synthetic" or "fetched"  -->
+  <log_verbosity value = "show_normal_and_higher"></log_verbosity> <!--can be "show_all", "show_normal_and_higher", "show_only_critical"  -->
+
+</settings>
+
+
