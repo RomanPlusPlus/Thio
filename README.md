@@ -43,7 +43,7 @@ Download this repo.
 
 #### 1. Setup and activate a conda virtual environment
 
-Create the environment:
+Create the environment (note: you must use thio_env as the name):
 
 ```conda create --name thio_env```
 
