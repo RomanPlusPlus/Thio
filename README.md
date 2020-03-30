@@ -20,4 +20,8 @@ The real-life data are current cryptocurrencies exchange rates, fetched from [Co
 
 ## Algos
 
-Currently, Thio supports one anomaly detection algo - KitNET. It is a lightweight online anomaly detection algorithm, which uses an ensemble of [autoencoders](https://en.wikipedia.org/wiki/Autoencoder). KitNET was developed by Mirsky et al, 2018, and [released](https://github.com/ymirsky/KitNET-py) under MIT license.  
+Currently, Thio supports one anomaly detection algo - KitNET. It is a lightweight online anomaly detection algorithm, which uses an ensemble of [autoencoders](https://en.wikipedia.org/wiki/Autoencoder). KitNET was developed by Mirsky et al, 2018, and [released](https://github.com/ymirsky/KitNET-py) under MIT license. Please support them by citing their paper:
+
+*Yisroel Mirsky, Tomer Doitshman, Yuval Elovici, and Asaf Shabtai, "Kitsune: An Ensemble of Autoencoders for Online Network Intrusion Detection", Network and Distributed System Security Symposium 2018 (NDSS'18)* 
+
+They're not affiliated with the Thio project. 
