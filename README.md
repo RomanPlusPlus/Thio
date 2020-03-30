@@ -25,3 +25,7 @@ Currently, Thio supports one anomaly detection algo - KitNET. It is a lightweigh
 *Yisroel Mirsky, Tomer Doitshman, Yuval Elovici, and Asaf Shabtai, "Kitsune: An Ensemble of Autoencoders for Online Network Intrusion Detection", Network and Distributed System Security Symposium 2018 (NDSS'18)* 
 
 They're not affiliated with the Thio project. 
+
+##  Name 
+
+Thio is named after  Isaac Asimov's [Thiotimoline](https://en.wikipedia.org/wiki/Thiotimoline), a fictitious chemical that starts dissolving *before* it makes contact with water. 
