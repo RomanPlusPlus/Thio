@@ -29,7 +29,9 @@ They're not affiliated with the Thio project.
 
 ## Compute
 
-You can run Thio on CPU, and it will still be able to detect anomalies in real-time, and learn on new data.
+You can run Thio on CPU, and it will still be able to detect anomalies in real-time, and learn on new data. 
+
+Training and inference processes are running in parallel. The models are regularly retrained, and the inference process uses the most recent model to produce risk scores.
 
 ##  Installation and usage
 
