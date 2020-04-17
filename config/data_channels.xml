@@ -8,8 +8,5 @@
     <channel name="bitcoin"/>
     <channel name="ethereum"/>
     <channel name="monero"/>
-    <channel name="litecoin"/>
-    <channel name="ark"/>
-                                                                                                                                      
-
+                                                                                                                                          
 </channels>

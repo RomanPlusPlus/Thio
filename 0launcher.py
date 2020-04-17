@@ -13,16 +13,12 @@ The most important things this script does are:
 import time
 
 from helper_funcs import get_full_path, delete_logs, append_logs, list_to_file, exit7, synthetic_data7
-from utils import read_configs, launch_scripts
+from launch_utils import read_configs, launch_scripts
 import data_provider
 from dataset_preprocessing import cleanup_dataset, data_sanity_check
 
 time_between_fetches = 1.0  # how often should the data be fetched from the data provider, in seconds
 this_many_last_observations = 500  # to save them TO a separate file
-conda_env_name = "thio_env"
-# TODO:
-# check if such env exists:
-# https://stackoverflow.com/questions/36539623/how-do-i-find-the-name-of-the-conda-environment-in-which-my-code-is-running
 
 # Reset states
 delete_logs()  # delete logs from the previous sessions
@@ -40,7 +36,7 @@ append_logs("data_channels : " + str(data_channels), "0launcher", "always", "pri
 cleanup_dataset(use_synthetic_data7)
 data_sanity_check(use_synthetic_data7, data_channels)
 
-launch_scripts(conda_env_name)
+launch_scripts()
 
 if use_synthetic_data7:
     data_filename = "dataset/syntheticData.txt"

@@ -1,12 +1,16 @@
 """ Almost everything related to KitNET is done in this module.
 
-KitNET is an online anomaly detection algorithm based on an ensemble of autoencoders, invented by Yisroel Mirsky.
+KitNET is an online anomaly detection algorithm based on an ensemble of autoencoders, invented by [Mirsky et al, 2017].
 
-Most of the code below is a modified version of the code by 2017 Yisroel Mirsky, released under the MIT license.
-A small part of the code is a modified version of the code by 2017 Yusuke Sugomori, released under the MIT license.
+Most of the code below is a modified version of their code, released under the MIT license.
+Source: https://github.com/ymirsky/KitNET-py
+Paper: Yisroel Mirsky, Tomer Doitshman, Yuval Elovici, and Asaf Shabtai, "Kitsune: An Ensemble of Autoencoders for
+Online Network Intrusion Detection", Network and Distributed System Security Symposium 2018 (NDSS'18)
+https://arxiv.org/abs/1802.09089
+A small part of the code is a modified version of the code by [Yusuke, 2017], released under the MIT license.
+Source: https://github.com/yusugomori/DeepLearning .
 The corresponding license texts are at end of this file.
 """
-
 
 import numpy as np
 import time
@@ -14,7 +18,6 @@ from scipy.cluster.hierarchy import linkage, to_tree
 import pickle
 
 from helper_funcs import append_logs, get_full_path, synthetic_data7
-
 
 use_synthetic_data7 = synthetic_data7()
 
@@ -37,6 +40,7 @@ def sigmoid(x):
 
 class DenoisingAutoencoderParams:
     """A data class for storing the Denoising Autoencoder params."""
+
     def __init__(self, n_visible=5, n_hidden=3, lr=0.001, corruption_level=0.0, grace_period=10000, hidden_ratio=None):
         self.n_visible = n_visible  # num of units in visible (input) layer
         self.n_hidden = n_hidden  # num of units in hidden layer
@@ -58,6 +62,7 @@ class DenoisingAutoencoder:
 
 
     """
+
     def __init__(self, params):
         self.params = params
 
@@ -357,15 +362,17 @@ def get_model(input_dataframe):
             append_logs(g_msg, name4logs, "verbose")
         model = kit_net_obj.train(input_arr[i, ])
 
-    return model, True
+    return model, None, True
 
 
-def ask_model(lmodel, observation):
+def ask_model(lmodel, observations_df, scaling):  # TODO: use scaling for KitNET too
+    datapoint = None
     try:
-        rmse_score = lmodel.execute(observation)
+        datapoint = observations_df.to_numpy()[-1]
+        rmse_score = lmodel.execute(datapoint)
     except Exception as e:
         rmse_score = 0
-        append_logs("ERROR: KitNET ask_model failed. observation: " + str(observation) + " . Exception: " + str(e),
+        append_logs("ERROR: KitNET ask_model failed. datapoint: " + str(datapoint) + " . Exception: " + str(e),
                     name4logs, "always")
     return rmse_score
 

@@ -8,13 +8,11 @@
  - other adaptions for our purposes
 """
 
-
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import numpy as np
-import pandas as pd
 import matplotlib
 
 from matplotlib.figure import Figure
@@ -26,8 +24,10 @@ import threading
 
 from helper_funcs import append_logs, read_prediction_for_aggregation
 from helper_funcs import read_latest_points, price_dicts_list, latest_prices_for_this_crypto
-from helper_funcs import get_max_anomaly_from_latest, get_full_path, exit7, synthetic_data7, get_latest_anomaly_scores
-from utils import read_configs
+from helper_funcs import get_max_anomaly_from_latest, get_full_path, exit7, synthetic_data7, \
+    get_scaling_factors, get_latest_anomaly_scores
+from launch_utils import read_configs
+import self_diagnostics
 
 matplotlib.use("Qt5Agg")
 
@@ -38,7 +38,8 @@ name4logs = "realtime_graph"
 cryptos = read_configs()["data_channels"]
 
 additional_plots = [
-    "KitNET risk score"
+    "KitNET risk score",
+    "Telemanom risk score"
 ]
 
 ch_names = cryptos + additional_plots
@@ -68,11 +69,8 @@ def plot_limits(historical_values):
         past_values_list = historical_values
 
     if len(past_values_list) > 0:
-        df = pd.DataFrame(past_values_list)
-        lower_quantile, upper_quantile = df[0].quantile([.25, .75])
 
-        min_val = lower_quantile * 0.5
-        max_val = upper_quantile * 2.0
+        min_val, max_val = get_scaling_factors(past_values_list)
 
         if min_val != 0 and max_val != 0:  # if any of them is zero, the log scaling will not work
             y_limits = (min_val, max_val)
@@ -100,6 +98,16 @@ for gma in range(len(ts_and_score_list)):
 minv, maxv = plot_limits(scores)
 y_lims.append((minv, maxv * 10))  # *10 to make the anomaly spikes look prettier
 
+# TODO: remove code duplication
+# limits for the plot of telemanom
+ts_and_score_list = get_latest_anomaly_scores("risk_scores/telemanom_anomaly" + anomaly_file_postfix + ".txt", 200)
+scores = []
+for gma in range(len(ts_and_score_list)):
+    ts, score = ts_and_score_list[gma]
+    scores.append(score)
+minv, maxv = plot_limits(scores)
+y_lims.append((minv, maxv * 10))  # *10 to make the anomaly spikes look prettier
+
 channels_count = len(cryptos)
 plots_count = len(ch_names)
 
@@ -117,26 +125,42 @@ def exit_btn_action():
     return
 
 
+def get_status_text():
+    dead_scripts_list = self_diagnostics.get_dead_scripts()
+    if len(dead_scripts_list) > 0:
+        dead_scripts_str = "CAUTION: some scripts are not running: " + str(dead_scripts_list) + " . "
+    else:
+        dead_scripts_str = "All processes are running. "
+
+    res = dead_scripts_str + "\n" + self_diagnostics.get_wenn_models_were_updated_string()
+
+    return res
+
+
 class CustomMainWindow(QMainWindow):
     """ Defines the window, buttons, and the callback func."""
+
     def __init__(self):
         super(CustomMainWindow, self).__init__()
         # Define the geometry of the main window
         self.setGeometry(300, 300, 800, 800)
-        self.setWindowTitle("my first window")
+        self.setWindowTitle("Thio")
         # Create FRAME_A
         self.FRAME_A = QFrame(self)
         self.FRAME_A.setStyleSheet("QWidget { background-color: %s }" % QColor(210, 210, 235, 255).name())
         self.LAYOUT_A = QGridLayout()
         self.FRAME_A.setLayout(self.LAYOUT_A)
         self.setCentralWidget(self.FRAME_A)
-        # Place the buttons
+        # Place the widgets
         self.zoomBtn = QPushButton(text='Add an anomaly to imput data')
         self.exitBtn = QPushButton(text='Exit all processes')
+        self.status_label = QLabel()
+        self.status_label.setText("Hello World")
         self.zoomBtn.clicked.connect(anomaly_btn_action)
         self.exitBtn.clicked.connect(exit_btn_action)
         self.LAYOUT_A.addWidget(self.zoomBtn, *(0, 0))
         self.LAYOUT_A.addWidget(self.exitBtn, *(1, 0))
+        self.LAYOUT_A.addWidget(self.status_label, *(2, 0))
         # Place the matplotlib figure
         self.myFig = RealtimeCanvas()
         self.LAYOUT_A.addWidget(self.myFig, *(0, 1))
@@ -149,11 +173,13 @@ class CustomMainWindow(QMainWindow):
 
     def add_data_callback_func(self, value):
         self.myFig.add_data(value)
+        self.status_label.setText(get_status_text())
         return
 
 
 class RealtimeCanvas(FigureCanvas, TimedAnimation):
     """ The class responsible for the real-time plotting."""
+
     def __init__(self):
 
         added_data_all = []
@@ -234,6 +260,9 @@ class RealtimeCanvas(FigureCanvas, TimedAnimation):
         c = len(cryptos)
         self.added_data_all[c].append(kitnet_risk)
 
+        telemanom_risk = value[2]
+        self.added_data_all[c + 1].append(telemanom_risk)
+
         return
 
     def _step(self, *args):
@@ -300,14 +329,17 @@ def data_send_loop(add_data_callback_func):
         # TODO: generate this dic automatically
     pause_fetching = {
         "prices_dic": False,
-        "kitnet_risk": False
+        "kitnet_risk": False,
+        "telemanom_risk": False
     }
 
     while True:
-        list2emit = [None, None]
+        # TODO: generate this list and the dicts automatically
+        list2emit = [None, None, None]
         try:
             prices_dic = dict()
             kitnet_risk = dict()
+            telemanom_risk = dict()
 
             # to prevent flooding the log with the entries about non-existing file during the first start
             if not pause_fetching["prices_dic"]:
@@ -322,11 +354,18 @@ def data_send_loop(add_data_callback_func):
                 if kitnet_risk is None:
                     pause_fetching["kitnet_risk"] = True
 
-            list2emit = [prices_dic, kitnet_risk]
+            if not pause_fetching["telemanom_risk"]:
+                # TODO: calculate the number from configs
+                telemanom_risk = get_max_anomaly_from_latest(
+                    "risk_scores/telemanom_anomaly" + anomaly_file_postfix + ".txt", 10)
+                if telemanom_risk is None:
+                    pause_fetching["telemanom_risk"] = True
 
-            append_logs(str(prices_dic), "realtime_graph", "verbose")
+            list2emit = [prices_dic, kitnet_risk, telemanom_risk]
+
+            append_logs(str(prices_dic), name4logs, "verbose")
         except Exception as e:
-            append_logs(str(e), "realtime_graph", "always")
+            append_logs(str(e), name4logs, "always")
 
         time.sleep(sleep_time)  # in seconds
         source.data_signal.emit(list2emit)  # <- Here you emit a signal!
