@@ -26,10 +26,13 @@ append_logs("Starting the main circle", name4logs, "always")
 
 old_modification_ts = -1
 old_meta_model_dic = None
+scales_dic = None
 
 while True:
     exit7()
-    old_modification_ts, old_meta_model_dic = infer_and_save_results(ask_model_func, modelpath, old_modification_ts,
-                                                                     old_meta_model_dic, useOnlyThisManyLatestOfLastN,
-                                                                     method_name)
+    old_modification_ts, old_meta_model_dic, scales_dic = infer_and_save_results(ask_model_func, modelpath,
+                                                                                 old_modification_ts,
+                                                                                 old_meta_model_dic,
+                                                                                 useOnlyThisManyLatestOfLastN,
+                                                                                 method_name, scales_dic)
     time.sleep(1.0)

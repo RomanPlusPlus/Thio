@@ -4,9 +4,9 @@ Will be made mostly obsolete after the planned transition to a database is done.
 
 import pandas as pd
 import helper_funcs
-import utils
+import launch_utils
 
-channels = utils.read_configs()["data_channels"]
+channels = launch_utils.read_configs()["data_channels"]
 
 
 def find_all_positions_of_character(istr, character):
@@ -149,11 +149,12 @@ def price_dict_to_str(price_dic, measure_unit, unixtime):
     return res
 
 
-def fetched_data_to_dataframe(filename):
+def fetched_data_to_dataframe(filename, last_n_values=-1):
     """ Reads the dataset file and converts it into a pandas dataframe, with columns representing channels.
 
     Args:
        filename (str): the dataset filename (e.g. "syntheticData.txt")
+       last_n_values (int): number of the latest datapoints to read
     """
     cols_number = 3 * len(channels)
 
@@ -166,8 +167,17 @@ def fetched_data_to_dataframe(filename):
 
     df = pd.DataFrame()
     try:
+
         # TODO: use isNonZeroFile7 to check if non zero
-        df = pd.read_csv(helper_funcs.get_full_path(filename),
+
+        # import tailer as tl
+        import io
+        source = helper_funcs.get_full_path(filename)
+        if last_n_values != -1:
+            last_lines = helper_funcs.read_last_lines(source, last_n_values)
+            source = io.StringIO('\n'.join(last_lines))
+
+        df = pd.read_csv(source,
                          sep=";|§",
                          names=my_cols,
                          header=None,

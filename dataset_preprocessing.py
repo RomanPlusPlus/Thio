@@ -1,8 +1,8 @@
-""" Prepares the dataset for training, by cleaning it and checking its integrity."""
+""" Prepares the dataset for training, by cleaning it, checking its integrity, scaling etc"""
 
 import pandas as pd
 
-from helper_funcs import is_nonzero_file7, get_full_path, append_logs
+from helper_funcs import is_nonzero_file7, get_full_path, append_logs, get_scaling_factors
 
 name4logs = "dataset_preprocessing"
 
@@ -90,3 +90,58 @@ def data_sanity_check(use_synthetic_data7, data_channels):
             exit()
     else:
         append_logs(dataset_filename + " doesn't exist or of zero size. First launch?", name4logs, "always", "print")
+
+
+def normilize_list(ilist):
+    """ Normilizes the list to [-0.5, 0.5], according to the min and max values in the list.
+    
+    E.g. each of these inputs return [-0.5, -0.25, 0.0, 0.25, 0.5] :
+       [1, 2, 3, 4, 5]
+       [-5, -4, -3, -2, -1]
+       [-2, -1, 0, 1, 2]     
+
+    Args:
+        ilist (list of floats): should be of a non-zero len 
+    """
+
+    min_val = min(ilist)
+    max_val = max(ilist)
+    if min_val != max_val:
+        miltiplier = 1 / (max_val - min_val)
+        extractor = miltiplier * min_val + 0.5
+        olist = []
+        for st in range(len(ilist)):
+            temp = miltiplier * ilist[st] - extractor
+            olist.append(temp)
+    else:
+        olist = [0] * len(ilist)
+
+    return olist
+
+
+def normilize_single_channel_df(raw_df, scaling_factors=None):
+    col_name = list(raw_df.columns.values)[0]
+
+    # The underlying assumption is that there are only FEW anomalies in the dataset that
+    # look like a big spike/fall of the value.
+    # If the assumption is false, the resulting dataset could be skewed.
+    # TODO: exclude known anomalies instead
+    if scaling_factors is None:
+        min_val, max_val = get_scaling_factors(raw_df)
+    else:
+        min_val, max_val = scaling_factors
+        print(min_val, max_val)
+
+    # removing the values outside of (min_val, max_val):
+    df = raw_df.loc[((raw_df >= min_val) & (raw_df <= max_val)).any(1)]
+
+    output_df = df.copy()
+    # the scaling itself happens here:    
+    if min_val != max_val:
+        miltiplier = 1 / (max_val - min_val)
+        extractor = miltiplier * min_val + 0.5
+        output_df[col_name] = miltiplier * df[col_name] - extractor
+    else:
+        output_df = df.replace(to_replace=min_val, value=0)
+
+    return output_df, min_val, max_val

@@ -11,14 +11,16 @@ import pandas as pd
 import numpy as np
 
 import parser
-import utils
+import launch_utils
 
 logs_fname = "logs/logs.txt"
 name4logs = "helper_funcs"
 
 
 def synthetic_data7():
-    config = utils.read_configs()
+    """ Reads configs and returns True if configs say that synthetic data should be used, and False otherwise
+    """
+    config = launch_utils.read_configs()
     if config["data_source"] == "synthetic":
         res = True
     else:
@@ -27,11 +29,16 @@ def synthetic_data7():
 
 
 use_synthetic_data7 = synthetic_data7()
-cryptos = utils.read_configs()["data_channels"]
-log_verbosity = utils.read_configs()["log_verbosity"]
+cryptos = launch_utils.read_configs()["data_channels"]
+log_verbosity = launch_utils.read_configs()["log_verbosity"]
 
 
 def get_full_path(filename):
+    """ Returns the full path of a file assuming that it's located in the same dir as this script.
+
+    Args:
+        filename (str): the name of the file, including the extension
+    """
     __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
     full_path = os.path.join(__location__, filename)
     return full_path
@@ -157,15 +164,11 @@ def price_dicts_list(lines):
 
 
 def read_prediction_for_aggregation(filename, who_asking=""):
-    # filename = 'predictionAverage.txt'
-
     if who_asking != "":
         who_asked_str = " . who asked: " + who_asking
     else:
         who_asked_str = ""
-
     try:
-        # time.sleep(2)
         if is_file7(filename):
             with open(get_full_path(filename)) as f:
                 lines = f.readlines()
@@ -190,9 +193,9 @@ def read_prediction_for_aggregation(filename, who_asking=""):
 
 
 # I'm a pickle, Morty!
-def save_model_to_pickle(model, timestamp, filename):
+def save_model_to_pickle(model, scales_dic, timestamp, filename):
     try:
-        obj_to_save = (model, timestamp)
+        obj_to_save = (model, scales_dic, timestamp)
         with open(get_full_path(filename), 'wb') as pkl:
             pickle.dump(obj_to_save, pkl)
     except Exception as e:
@@ -204,26 +207,33 @@ def read_model_from_pickle(filename):
     try:
         if is_nonzero_file7(filename):
             with open(get_full_path(filename), 'rb') as pkl:
-                model, timestamp = pickle.load(pkl)
+                model, scales_dic, timestamp = pickle.load(pkl)
             append_logs("loaded model and timestamp " + str(timestamp), "helper_funcs", "verbose", "print")
         else:
             model = None
             timestamp = None
+            scales_dic = None
+
     except Exception as e:
         model = None
         timestamp = None
+        scales_dic = None
         msg = "failed to read model from pickle " + str(filename) + " .Exception:" + str(e)
         append_logs(msg, "helper_funcs", "always", "print")
-    return model, timestamp
+    return model, scales_dic, timestamp
 
 
-# Read the N last lines of a file and output the list of them.
-# It's doing it without loading the entire file into memory. 
-# It's a modified version of this code: https://stackoverflow.com/a/48087596
 def read_last_lines(filename, window=1):
+    """ Reads the N last lines of a file and output the list of them. Without loading the entire file into memory.
+
+    It's a modified version of this code by Hauke Rehfeld, 2018: https://stackoverflow.com/a/48087596
+
+    Args:
+        filename (str): the name of the file to read from
+        window (int): how many last raws to read
+    """
     if is_nonzero_file7(filename):
         with open(get_full_path(filename), 'rb') as f:
-
             # Get the last `window` lines of file `f` as a list of bytes.
             if window == 0:
                 return b''
@@ -235,7 +245,6 @@ def read_last_lines(filename, window=1):
             while nlines > 0 and end > 0:
                 i = max(0, end - bufsize)
                 nread = min(end, bufsize)
-
                 f.seek(i)
                 chunk = f.read(nread)
                 data.append(chunk)
@@ -245,20 +254,22 @@ def read_last_lines(filename, window=1):
 
             # convert it to utf-8
             decoded_text = list_of_bytes.decode('utf-8')
-
             output_list = decoded_text.split('\n')
-
     else:
         output_list = []
 
     return output_list
 
 
-# Input looks like this (a string):
-# 1584452172.12; 0.0071348165601308475
-# Output looks like this (touple of floats):
-# (1584452172.12, 0.0071348165601308475)
 def anomaly_str_to_ts_and_score(istr):
+    """ Parses a string that contains a timestamp and an anomaly score.
+
+    Output looks like this (a tuple of floats):
+    (1584452172.12, 0.0071348165601308475)
+
+    Args:
+        istr(str): looks like this: 1584452172.12; 0.0071348165601308475
+    """
     semicolons_ind = istr.find(';')
     if semicolons_ind > 0:
         stamp_str = istr[:semicolons_ind]
@@ -271,11 +282,14 @@ def anomaly_str_to_ts_and_score(istr):
     return res
 
 
-# Input1: filename of the file that contains anomaly scores, with lines looking like this (timestamp, score): 
-# 1584452170.96; 0.007139212893789588
-# Input2: how many scores to get 
-# Output: a list of anomaly scores as floats
 def get_latest_anomaly_scores(filename, scores_num):
+    """ Reads the file that contains anomaly scores, and returns them as a list of floats.
+
+    Args:
+        filename (str): each row in the file looks like this (timestamp, score):
+            1584452170.96; 0.007139212893789588
+        scores_num (int): how many scores to read
+    """
     lines = read_last_lines(filename, scores_num)
     olist = []
     for gla in range(len(lines)):
@@ -311,8 +325,7 @@ def train_and_save_model(use_only_this_many_latest, get_model_func, method_name)
     else:
         dataset_filename = "dataset/fetchedData.txt"
 
-    input_dataframe = parser.fetched_data_to_dataframe(dataset_filename)
-    # TODO: slice the dataframe according to use_only_this_many_latest
+    input_dataframe = parser.fetched_data_to_dataframe(dataset_filename, use_only_this_many_latest)
 
     if not input_dataframe.empty:
         timestamps = pd.DataFrame(input_dataframe.index).to_numpy()
@@ -328,7 +341,7 @@ def train_and_save_model(use_only_this_many_latest, get_model_func, method_name)
 
     if datapoints_number > 0:
         try:
-            metamodel, success = get_model_func(input_dataframe)
+            metamodel, scales_dic, success = get_model_func(input_dataframe)
 
             if not success:  # There is likely not enough data to build models. Sleep a bit
                 time.sleep(120)
@@ -337,6 +350,7 @@ def train_and_save_model(use_only_this_many_latest, get_model_func, method_name)
 
         except Exception as e:
             metamodel = None
+            scales_dic = None
             append_logs("ERROR: failed to to get metamodel: " + str(e), name4logs, "always", "print")
 
         if use_synthetic_data7:
@@ -344,50 +358,36 @@ def train_and_save_model(use_only_this_many_latest, get_model_func, method_name)
         else:
             output_postfix = "_fetched"
 
-        save_model_to_pickle(metamodel, latest_timestamp, "pickled_models/" + method_name + output_postfix + ".pkl")
+        save_model_to_pickle(metamodel, scales_dic, latest_timestamp,
+                             "pickled_models/" + method_name + output_postfix + ".pkl")
 
         append_logs("Trained and saved a new model for " + method_name + ", using this many datapoints: " + str(
             datapoints_number), name4logs, "normal")
 
 
-def obtain_model(modelpath, old_modification_ts, old_meta_model_dic):
+def obtain_model(modelpath, old_modification_ts, old_meta_model_dic, old_scales_dic):
     new_modification_ts = get_file_modification_ts(modelpath)
     if int(old_modification_ts) < int(
             new_modification_ts):  # to avoid loading old models again, as models can be massive
         append_logs("The model was updated. Prev model's file was modified at " + str(
             old_modification_ts) + " . This model's file was modified at " + str(new_modification_ts) + " . Loading it",
                     name4logs, "verbose")
-        new_meta_model_dic, model_ts = read_model_from_pickle(modelpath)
+        new_meta_model_dic, new_scales_dic, model_ts = read_model_from_pickle(modelpath)
+
         old_meta_model_dic = new_meta_model_dic
         old_modification_ts = new_modification_ts
+        old_scales_dic = new_scales_dic
+
     else:
         new_meta_model_dic = old_meta_model_dic
         model_ts = None
-    return old_meta_model_dic, new_meta_model_dic, model_ts, old_modification_ts
+        new_scales_dic = old_scales_dic
 
-
-# The input looks like this:
-#     datapoint_dict = {'ark': 81.73, 'bitcoin': 7898.63, 'ethereum': 204.14, 'litecoin': 54.18, 'monero': 62.36}
-#     keys_list = ["bitcoin", "ethereum", "monero", "litecoin", "ark" ]
-# The output looks like this (numpy array):
-# [7898.63  204.14   62.36   54.18   81.73]
-def datapoint_dict_to_numpy(datapoint_dict, keys_list):
-    ordered_list = []
-
-    missing_keys = False
-    for ddt in range(len(keys_list)):
-        if keys_list[ddt] not in datapoint_dict:
-            missing_keys = True
-
-    if not missing_keys:  # if there are missing keys, it should not crash, but should return an empty num arr
-        for ddt in range(len(keys_list)):
-            ordered_list.append(datapoint_dict[keys_list[ddt]])
-
-    return np.asarray(ordered_list)
+    return old_meta_model_dic, new_meta_model_dic, model_ts, old_modification_ts, old_scales_dic, new_scales_dic
 
 
 def infer_and_save_results(ask_model_func, modelpath, old_modification_ts, old_meta_model_dic,
-                           use_only_this_many_latest, method_name):
+                           use_only_this_many_latest, method_name, scales_dic):
     if use_synthetic_data7:
         latest_points_filename = "dataset/lastNpoints_synthetic.txt"
         output_postfix = "_synthetic"
@@ -397,17 +397,24 @@ def infer_and_save_results(ask_model_func, modelpath, old_modification_ts, old_m
 
     if is_file7(modelpath):
 
-        old_meta_model_dic, new_meta_model_dic, model_ts, old_modification_ts = obtain_model(modelpath,
-                                                                                             old_modification_ts,
-                                                                                             old_meta_model_dic)
+        old_meta_model_dic, new_meta_model_dic, model_ts, old_modification_ts, old_scales_dic, new_scales_dic = obtain_model(
+            modelpath,
+            old_modification_ts,
+            old_meta_model_dic,
+            scales_dic)
 
-        lines = read_latest_points(latest_points_filename, use_only_this_many_latest)
-        latest_price_dicts_list = price_dicts_list(lines)
+        append_logs("Obtained model for " + method_name + ": new_scales_dic: " + str(new_scales_dic), name4logs,
+                    "verbose")
 
-        if len(latest_price_dicts_list) > 0:
-            single_dict, tempts = latest_price_dicts_list[-1]
-            observation = datapoint_dict_to_numpy(single_dict, cryptos)
-            anomaly_score = ask_model_func(new_meta_model_dic, observation)
+        observations_df = parser.fetched_data_to_dataframe(latest_points_filename, use_only_this_many_latest)
+
+        if observations_df.shape[0] > 0:
+            try:
+                anomaly_score = ask_model_func(new_meta_model_dic, observations_df, new_scales_dic)
+            except Exception as e:
+                anomaly_score = 0
+                append_logs("ERROR: An attempt to ask a model for " + method_name + " caused an exception: " + str(e),
+                            name4logs, "always")
 
             anomaly_ts = time.time()
 
@@ -423,4 +430,33 @@ def infer_and_save_results(ask_model_func, modelpath, old_modification_ts, old_m
             name4logs, "always")
         time.sleep(30)
 
-    return old_modification_ts, old_meta_model_dic
+    return old_modification_ts, old_meta_model_dic, scales_dic
+
+
+def get_scaling_factors(input_arr):
+    """ Calculates the 0.25 and 0.75 quantiles, and then expands them for a safety margin
+
+    Args:
+        input_arr (a list of floats OR a single-column dataframe): should be of a non-zero len 
+
+    """
+    if isinstance(input_arr, list):
+        df = pd.DataFrame(input_arr)
+        lower_quantile, upper_quantile = df[0].quantile([.25, .75])
+    else:
+        col_name = list(input_arr.columns.values)[0]
+        lower_quantile, upper_quantile = input_arr[col_name].quantile([.25, .75])
+
+    # How we ensure that a safety margin is added properly:
+    # Let's say the quantile vales are 2 and 6.
+    # In this case, min_val and max_val are 1 and 12.
+    # For quantile vales of -2 and 6, they should be -4 and 12
+    # For quantile vales of -6 and -2, they should be -12 and -1
+    min_val = lower_quantile * 0.5
+    max_val = upper_quantile * 2.0
+    if min_val < 0:
+        min_val *= 4.0
+    if max_val < 0:
+        max_val *= 0.25
+
+    return min_val, max_val

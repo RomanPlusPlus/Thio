@@ -1,0 +1,21 @@
+2020-04-17 20:44:42 : 0launcher : use_synthetic_data7 : True
+2020-04-17 20:44:42 : 0launcher : data_channels : ['bitcoin', 'ethereum', 'monero']
+2020-04-17 20:44:47 : lib_KitNET_train : starting the training circling
+2020-04-17 20:44:47 : lib_KitNET_infer : Starting the main circle
+2020-04-17 20:44:54 : lib_telemanom_train : starting the training circling
+2020-04-17 20:44:54 : lib_telemanom_infer : Starting the main circle
+2020-04-17 20:44:55 : lib_telemanom_calc : self.input_metamodel is None
+2020-04-17 20:44:55 : lib_telemanom_calc : training data is from RAM
+2020-04-17 20:44:55 : lib_telemanom_calc : all_data_df.tail:
+               bitcoin  ethereum    monero
+1.587149e+09  1.738863  4.452876  1.114070
+1.587149e+09  1.085476  4.185704  2.889430
+1.587149e+09  1.075236  4.720049  2.889430
+1.587149e+09  1.315093  2.470716  3.006175
+1.587149e+09  1.224841  2.470716  1.114070
+2020-04-17 20:44:55 : lib_telemanom_calc : Number of datapoints for bitcoin :30000
+2020-04-17 20:44:55 : lib_telemanom_calc : scaling_factors:None
+2020-04-17 20:44:59 : lib_telemanom_calc : self.config.train: True
+2020-04-17 20:45:15 : helper_funcs : Trained and saved a new model for kitnet, using this many datapoints: 61680
+2020-04-17 20:45:47 : helper_funcs : Trained and saved a new model for kitnet, using this many datapoints: 61707
+2020-04-17 20:46:29 : helper_funcs : Trained and saved a new model for kitnet, using this many datapoints: 61740
