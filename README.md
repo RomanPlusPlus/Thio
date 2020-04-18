@@ -126,3 +126,7 @@ Telemanom will take some time after the launch before starting to detect anomali
 ### 5. Name 
 
 Thio is named after Isaac Asimov's [Thiotimoline](https://en.wikipedia.org/wiki/Thiotimoline), a fictitious chemical that starts dissolving **before** it makes contact with water:) 
+
+### 6. Contact
+
+If you have any questions that can't be resolved through Github, feel free to [contact](https://www.linkedin.com/in/sitelew/) me directly. 
