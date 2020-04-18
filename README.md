@@ -113,7 +113,7 @@ Launch 0launcher.py and wait a few sec.
 
 A window (similar to the one depicted above) will be opened, with plots regularly updating.
 
-Click the "add an anomaly" button and observe a bump in the bottom graph. 
+Click the "add an anomaly" button and observe a bump in the two bottom graphs. 
 
 The anomaly was added to the input data, the data was processed by the anomaly-detection algo, and the corresponding risk scores were plotted.   
 
