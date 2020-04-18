@@ -62,7 +62,9 @@ Activate it:
 Install dependencies: 
 
 ```conda install numpy pandas pyyaml keras```
+
 ```conda install -c conda-forge tensorflow```
+
 ```pip install theano cufflinks more_itertools```
 
 Deactivate it:
