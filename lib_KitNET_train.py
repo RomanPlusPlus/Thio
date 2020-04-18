@@ -1,6 +1,6 @@
 """ Creates/updates the KitNET model, by regularly training it on the latest N datapoints.
 
-It runs in parallel with the lib_KitNET_infer.py, to make training and inference work as separate processes.
+It runs in parallel with the inference script (lib_KitNET_infer.py), supplying it with new models to infer upon.
 
 Note: if you want a model that produce meaningful results, you need a dataset of at least 50 000 datapoints.
 """
