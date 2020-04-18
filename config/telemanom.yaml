@@ -56,7 +56,7 @@ n_predictions: 5
 p: 0.13
 
 
-# --------------------------------------------------
+# ==================================
 
 # Most of the code above is a modified version of the code by [Hundman et al, 2018], which was released under the
 # following license:
