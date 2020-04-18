@@ -19,7 +19,7 @@ summon_filename = "state_controls/summonAnomaly.txt"
 name4logs = "data_provider"
 
 
-# ======================== real-world data (crypto exchange rates) ==========================
+# =================== real-world data (cryptocurrencies exchange rates) =====================
 
 # source: https://github.com/man-c/pycoingecko
 def api_url_params(api_url, params):
