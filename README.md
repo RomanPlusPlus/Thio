@@ -41,7 +41,22 @@ Training and inference processes are running in parallel. The models are regular
 
 ##  Installation and usage
 
-Thio was tested on Ubuntu 16.04.
+Thio was tested on Ubuntu 16.04, with the following packages versions:
+* conda==4.8.3
+* Python==3.8.2 (in the thio_kitnet env)
+* Python==3.7.7 (in the thio_telemanom env)
+* numpy==1.18.1
+* pandas==1.0.3
+* pyyaml==5.3.1
+* keras==2.3.1
+* tensorflow==2.1.0
+* theano==1.0.4
+* cufflinks==0.17.3
+* more_itertools==8.2.0
+* scipy==1.4.1
+* matplotlib==3.1.3
+* requests==2.23.0
+* psutil==5.7.0
 
 #### 0. Dowload
 
