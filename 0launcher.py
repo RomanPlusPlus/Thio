@@ -1,12 +1,12 @@
 """ It's the script you should execute to launch the whole thing.
 
-Make sure to create a conda environment named kitnet_env with all the dependencies installed, as
-described in the tutorial.
+Make sure to create the conda environments named thio_telemanom and thio_kitnet with all the dependencies installed, as
+described in the readme.
 
 The most important things this script does are:
 - resetting states (deletes previous logs etc)
 - preprocessing the dataset
-- launching other scripts for a parallel execution of training, inference, gui etc
+- launching other scripts for parallel execution of training, inference, gui etc
 - regularly fetching and saving new datapoints
 """
 
